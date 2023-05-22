@@ -37,6 +37,7 @@ const userSchema = mongoose.Schema({
   email: String,
   password: String,
   googleId: String,
+  secret: String,
 });
 
 // set passportLocalMongoose to Use Schema. passportLocalMongoose hash and salt
@@ -119,13 +120,46 @@ app.get(
 );
 
 app.get("/secrets", (req, res) => {
-  // Passport session check for logined user
-  if (req.isAuthenticated()) {
-    res.render("secrets");
-  } else {
-    res.redirect("/login");
-  }
+  User.find({ secret: { $ne: null } })
+    .then((foundUsers) => {
+      res.render("secrets", { usersWithSecrets: foundUsers });
+    })
+    .catch(() => {
+      console.log(err);
+    });
 });
+
+app
+  .route("/submit")
+
+  .get((req, res) => {
+    // Passport session check for logined user
+    if (req.isAuthenticated()) {
+      res.render("submit");
+    } else {
+      res.redirect("/login");
+    }
+  })
+
+  .post((req, res) => {
+    // Passport saves the user details to req
+    console.log(req.user);
+    User.findById(req.user.id)
+      .then((foundUser) => {
+        foundUser.secret = req.body.secret;
+        foundUser
+          .save()
+          .then((result) => {
+            res.redirect("/secrets");
+          })
+          .catch((err) => {
+            console.log(err);
+          });
+      })
+      .catch((err) => {
+        console.log(err);
+      });
+  });
 
 app.get("/logout", (req, res) => {
   // Passport session logout
