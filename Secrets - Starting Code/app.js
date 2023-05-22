@@ -142,7 +142,7 @@ app
   })
 
   .post((req, res) => {
-    // Passport saves the user details to req
+    // Passport saves the user details to req and finds the logined user.
     console.log(req.user);
     User.findById(req.user.id)
       .then((foundUser) => {
